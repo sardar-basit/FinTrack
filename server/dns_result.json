@@ -1,0 +1,1 @@
+{"txt":[["authSource=admin&replicaSet=atlas-orwbnc-shard-0"]],"srv":[{"name":"ac-kjc9gxg-shard-00-01.ncd05xl.mongodb.net","port":27017,"priority":0,"weight":0,"type":"SRV"},{"name":"ac-kjc9gxg-shard-00-02.ncd05xl.mongodb.net","port":27017,"priority":0,"weight":0,"type":"SRV"},{"name":"ac-kjc9gxg-shard-00-00.ncd05xl.mongodb.net","port":27017,"priority":0,"weight":0,"type":"SRV"}]}

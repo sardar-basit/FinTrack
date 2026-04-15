@@ -1,0 +1,29 @@
+# Node modules (both client and server)
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/dist/
+client/dist-ssr/
+
+# Environment files (keep secrets safe!)
+.env
+server/.env
+client/.env
+client/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# Temp files
+server/dns.txt
+server/dns_result.json
+server/temp_dns.js
