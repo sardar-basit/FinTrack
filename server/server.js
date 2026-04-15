@@ -19,10 +19,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger);
 
 // CORS configuration
+const allowedOrigins = [
+  'https://fin-track-orpin.vercel.app',
+  'http://localhost:5173'
+];
+
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://your-production-url.com' 
-    : 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
