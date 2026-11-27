@@ -1,104 +1,60 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import Card from '../components/Card';
-import Input from '../components/Input';
-import Button from '../components/Button';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { Wallet, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
-  
   const { login } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
+    setLoading(true);
     try {
-      setError(null);
-      setLoading(true);
-      await login(email, password);
-      navigate('/dashboard');
+      const res = await login(form.email, form.password);
+      if (res.user?.mustChangePassword) navigate('/change-password');
+      else navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+      toast.error(err.response?.data?.message || 'Login failed');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      padding: 'var(--spacing-4)'
-    }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)', padding: '1rem' }}>
       <div style={{ width: '100%', maxWidth: '400px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 'var(--spacing-6)' }}>
-          <h1 style={{ color: 'var(--color-primary)', fontSize: '2rem' }}>FinTrack</h1>
-          <p style={{ color: 'var(--color-text-secondary)' }}>Welcome back! Please login to your account.</p>
-        </div>
-        
-        <Card noPadding>
-          <form onSubmit={handleSubmit} style={{ padding: 'var(--spacing-6)' }}>
-            {error && (
-              <div style={{ 
-                backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                color: 'var(--color-error)', 
-                padding: 'var(--spacing-3)', 
-                borderRadius: 'var(--radius-md)',
-                marginBottom: 'var(--spacing-4)',
-                fontSize: '0.875rem'
-              }}>
-                {error}
-              </div>
-            )}
-            
-            <Input 
-              label="Email Address" 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-            
-            <Input 
-              label="Password" 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-            
-            <div style={{ marginTop: 'var(--spacing-6)' }}>
-              <Button type="submit" fullWidth loading={loading}>
-                Sign In
-              </Button>
-            </div>
-          </form>
-          
-          <div style={{ 
-            padding: 'var(--spacing-4)', 
-            borderTop: '1px solid var(--color-border)', 
-            textAlign: 'center',
-            backgroundColor: 'var(--color-surface-muted)',
-            borderBottomLeftRadius: 'var(--radius-lg)',
-            borderBottomRightRadius: 'var(--radius-lg)',
-            fontSize: '0.875rem'
-          }}>
-             Don't have an account? <Link to="/signup" style={{ fontWeight: 600 }}>Sign up</Link>
+        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+          <div style={{ width: 56, height: 56, background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+            <Wallet size={28} color="#fff" />
           </div>
-        </Card>
+          <h1 style={{ fontSize: '1.75rem', marginBottom: '0.375rem' }}>Welcome back</h1>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>Sign in to your FinTrack account</p>
+        </div>
+        <div className="card">
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Email address</label>
+              <input className="form-input" type="email" placeholder="you@example.com" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required autoFocus />
+            </div>
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <input className="form-input" type={showPass ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required style={{ paddingRight: '2.5rem' }} />
+                <button type="button" onClick={() => setShowPass(p => !p)} style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                  {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary btn-lg" style={{ width: '100%' }} disabled={loading}>
+              {loading ? <><Loader2 size={18} className="spin" /> Signing in...</> : 'Sign in'}
+            </button>
+          </form>
+        </div>
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>© {new Date().getFullYear()} FinTrack</p>
       </div>
     </div>
   );

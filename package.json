@@ -1,0 +1,26 @@
+{
+  "name": "fintrack-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Full-Stack Finance & Team Expense Management System",
+  "scripts": {
+    "dev:server": "cd server && npm start",
+    "dev:client": "cd client && npm run dev",
+    "build:client": "cd client && npm run build",
+    "build": "npm run install:all && npm run build:client",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "test:api": "node server/test_team_expenses.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.0",
+    "express": "^5.2.1",
+    "express-rate-limit": "^7.5.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.3",
+    "morgan": "^1.10.1"
+  }
+}
