@@ -1,84 +1,67 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import axiosInstance from '../api/axiosInstance';
-import Card from '../components/Card';
-import Input from '../components/Input';
-import Button from '../components/Button';
-import { User, Settings, Info } from 'lucide-react';
+import { getInitials } from '../utils/format';
+import { Save, Lock, Loader2 } from 'lucide-react';
 
 const Profile = () => {
-  const { user } = useAuth();
-  const [name, setName] = useState(user?.name || '');
-  const [currency, setCurrency] = useState(user?.currency || 'USD');
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
+  const { user, updateUser } = useAuth();
+  const toast = useToast();
+  const [profileForm, setProfileForm] = useState({ name: user?.name || '', currency: user?.currency || 'PKR' });
+  const [passForm, setPassForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [passLoading, setPassLoading] = useState(false);
 
-  const handleUpdate = async (e) => {
+  const saveProfile = async (e) => {
     e.preventDefault();
+    setProfileLoading(true);
     try {
-      setLoading(true);
-      await axiosInstance.put('/auth/profile', { name, currency });
-      setSuccess('Profile updated successfully!');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      alert('Failed to update profile');
-    } finally {
-      setLoading(false);
-    }
+      const r = await axiosInstance.put('/auth/profile', profileForm);
+      updateUser(r.data.user);
+      toast.success('Profile updated');
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+    finally { setProfileLoading(false); }
+  };
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+    if (passForm.newPassword !== passForm.confirm) { toast.error('Passwords do not match'); return; }
+    if (passForm.newPassword.length < 6) { toast.error('Min. 6 characters'); return; }
+    setPassLoading(true);
+    try {
+      await axiosInstance.put('/auth/change-password', { currentPassword: passForm.currentPassword, newPassword: passForm.newPassword });
+      toast.success('Password changed');
+      setPassForm({ currentPassword: '', newPassword: '', confirm: '' });
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+    finally { setPassLoading(false); }
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <h1 style={{ marginBottom: 'var(--spacing-6)' }}>Profile Settings</h1>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-6)' }}>
-        <Card title="Personal Information" icon={<User size={20} />}>
-          <form onSubmit={handleUpdate}>
-            {success && <div style={{ color: 'var(--color-success)', marginBottom: '1rem', backgroundColor: 'rgba(34,197,94,0.1)', padding: '0.75rem', borderRadius: '4px' }}>{success}</div>}
-            
-            <Input 
-              label="Full Name" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-            />
-            
-            <Input 
-              label="Email Address" 
-              value={user?.email || ''} 
-              disabled 
-              style={{ backgroundColor: 'var(--color-surface-muted)', cursor: 'not-allowed' }}
-            />
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.875rem', fontWeight: 500 }}>Preferred Currency</label>
-              <select value={currency} onChange={e => setCurrency(e.target.value)} style={{ width: '100%', padding: '0.625rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
-            </div>
-            
-            <div style={{ marginTop: '1.5rem' }}>
-              <Button type="submit" loading={loading}><Settings size={18} style={{ marginRight: '8px' }}/> Update Profile</Button>
-            </div>
-          </form>
-        </Card>
-
-        <Card title="About FinTrack">
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            <div style={{ padding: '1rem', backgroundColor: 'rgba(79, 70, 229, 0.1)', borderRadius: '100%', color: 'var(--color-primary)' }}>
-              <Info size={32} />
-            </div>
-            <div>
-              <p style={{ marginBottom: '1rem' }}>
-                FinTrack is your all-in-one personal finance dashboard. Track where your money goes, stay on top of recurring subscriptions, and visualize your spending trends over time.
-              </p>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-                Version 1.0.0 &copy; {new Date().getFullYear()} FinTrack MERN App.
-              </p>
-            </div>
+    <div>
+      <div className="page-header"><div className="page-header-left"><h1>Profile & Settings</h1><p>Manage your account information</p></div></div>
+      <div className="grid-2" style={{ alignItems: 'start' }}>
+        <div className="card">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--color-border)' }}>
+            <div className="avatar" style={{ width: 56, height: 56, fontSize: '1.25rem', background: user?.role === 'admin' ? '#7c3aed' : '#10b981' }}>{getInitials(user?.name)}</div>
+            <div><h3>{user?.name}</h3><p style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>{user?.email}</p><span className={`badge ${user?.role === 'admin' ? 'badge-admin' : 'badge-user'}`}>{user?.role}</span></div>
           </div>
-        </Card>
+          <form onSubmit={saveProfile}>
+            <div className="form-group"><label className="form-label">Full Name</label><input className="form-input" value={profileForm.name} onChange={e => setProfileForm(p => ({ ...p, name: e.target.value }))} required /></div>
+            <div className="form-group"><label className="form-label">Email (read-only)</label><input className="form-input" value={user?.email || ''} disabled style={{ opacity: 0.7 }} /></div>
+            <div className="form-group"><label className="form-label">Currency</label><select className="form-input form-select" value={profileForm.currency} onChange={e => setProfileForm(p => ({ ...p, currency: e.target.value }))}><option value="PKR">PKR — Pakistani Rupee</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option></select></div>
+            <button type="submit" className="btn btn-primary" disabled={profileLoading}>{profileLoading ? <><Loader2 size={16} className="spin" />Saving...</> : <><Save size={16} />Save Profile</>}</button>
+          </form>
+        </div>
+        <div className="card">
+          <h3 style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Lock size={20} />Change Password</h3>
+          <form onSubmit={changePassword}>
+            <div className="form-group"><label className="form-label">Current Password</label><input className="form-input" type="password" value={passForm.currentPassword} onChange={e => setPassForm(p => ({ ...p, currentPassword: e.target.value }))} required /></div>
+            <div className="form-group"><label className="form-label">New Password</label><input className="form-input" type="password" value={passForm.newPassword} onChange={e => setPassForm(p => ({ ...p, newPassword: e.target.value }))} placeholder="Min. 6 characters" required /></div>
+            <div className="form-group"><label className="form-label">Confirm New Password</label><input className="form-input" type="password" value={passForm.confirm} onChange={e => setPassForm(p => ({ ...p, confirm: e.target.value }))} required /></div>
+            <button type="submit" className="btn btn-outline" disabled={passLoading}>{passLoading ? <><Loader2 size={16} className="spin" />Changing...</> : <><Lock size={16} />Change Password</>}</button>
+          </form>
+        </div>
       </div>
     </div>
   );

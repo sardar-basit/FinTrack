@@ -1,75 +1,26 @@
-import React from 'react';
+import { Menu, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Menu, LogOut, User as UserIcon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { getInitials } from '../utils/format';
 import { useNavigate } from 'react-router-dom';
 
 const Navbar = ({ toggleSidebar }) => {
-  const { user, logout } = useAuth();
+  const { user, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
   return (
-    <header style={{
-      height: '64px',
-      backgroundColor: 'var(--color-surface)',
-      borderBottom: '1px solid var(--color-border)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0 var(--spacing-6)',
-      position: 'sticky',
-      top: 0,
-      zIndex: 10,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)' }}>
-        <button 
-          onClick={toggleSidebar}
-          style={{ 
-            background: 'none', 
-            border: 'none', 
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            color: 'var(--color-text-secondary)'
-          }}
-        >
-          {/* Menu icon replaces the default button shape */}
-          <Menu size={24} />
-        </button>
-        <span style={{ fontWeight: 600, fontSize: '1.25rem', color: 'var(--color-primary)' }}>
-          FinTrack
-        </span>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', color: 'var(--color-text-secondary)' }}>
-          <UserIcon size={20} />
-          <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{user?.name || 'User'}</span>
-        </div>
-        <button 
-          onClick={handleLogout}
-          style={{
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.25rem',
-            color: 'var(--color-text-secondary)',
-            fontSize: '0.875rem',
-            fontWeight: 500
-          }}
-        >
-          <LogOut size={18} />
-          <span>Logout</span>
+    <header className="navbar">
+      <button className="btn btn-ghost btn-sm" onClick={toggleSidebar} style={{ padding: '8px', width: 36, height: 36 }}><Menu size={20} /></button>
+      <div style={{ flex: 1 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <button className="btn btn-ghost btn-sm" onClick={toggleTheme} style={{ width: 36, height: 36, padding: 0 }}>{theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}</button>
+        <button className="btn btn-ghost btn-sm" style={{ width: 36, height: 36, padding: 0 }} onClick={() => navigate('/profile')}>
+          <div className="avatar" style={{ width: 32, height: 32, fontSize: '0.75rem', background: isAdmin ? '#7c3aed' : '#10b981', cursor: 'pointer' }}>{getInitials(user?.name)}</div>
         </button>
       </div>
     </header>
   );
 };
 
-export default React.memo(Navbar);
+export default Navbar;
